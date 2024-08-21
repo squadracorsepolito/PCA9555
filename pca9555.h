@@ -38,14 +38,14 @@ struct PCA9555_Handle {
 // Addresses (A0-A2)
 #define PCA9555_ADDR_FIXED_PART      (0b0100000U)
 #define PCA9555_ADDR_FIXED_PART_MASK (0b0000111U)
-#define PCA9555_ADDR_20 0x20
-#define PCA9555_ADDR_21 0x21
-#define PCA9555_ADDR_22 0x22
-#define PCA9555_ADDR_23 0x23
-#define PCA9555_ADDR_24 0x24
-#define PCA9555_ADDR_25 0x25
-#define PCA9555_ADDR_26 0x26
-#define PCA9555_ADDR_27 0x27
+#define PCA9555_ADDR_20              0x20
+#define PCA9555_ADDR_21              0x21
+#define PCA9555_ADDR_22              0x22
+#define PCA9555_ADDR_23              0x23
+#define PCA9555_ADDR_24              0x24
+#define PCA9555_ADDR_25              0x25
+#define PCA9555_ADDR_26              0x26
+#define PCA9555_ADDR_27              0x27
 
 /* Command Bytes */
 #define PCA9555_CB_INPUTS_PORTS     0x00

@@ -52,12 +52,12 @@ static HAL_StatusTypeDef PCA9555_readRegister(struct PCA9555_Handle *hdev, uint8
     uint8_t datalow  = 0;
 
     /* reading the low byte */
-    ret = HAL_I2C_Mem_Read(hdev->hi2c, hdev->addr, addr, 1, &datahigh, 1, HAL_MAX_DELAY);
+    ret = HAL_I2C_Mem_Read(hdev->hi2c, hdev->addr, addr, 1, &datalow, 1, HAL_MAX_DELAY);
     if (ret != HAL_OK)
         return ret;
 
     /* reading the high byte */
-    ret = HAL_I2C_Mem_Read(hdev->hi2c, hdev->addr, addr + 1, 1, &datalow, 1, HAL_MAX_DELAY);
+    ret = HAL_I2C_Mem_Read(hdev->hi2c, hdev->addr, addr + 1, 1, &datahigh, 1, HAL_MAX_DELAY);
     if (ret != HAL_OK)
         return ret;
 
@@ -114,11 +114,7 @@ static HAL_StatusTypeDef PCA9555_updateRegisterBit(struct PCA9555_Handle *hdev,
     // set the value for the particular bit
     bitWrite(regValue, pin, bitvalue);
 
-    ret = PCA9555_writeRegister(hdev, commandByteAddr, lowByte(regValue));
-    if (ret != HAL_OK)
-        return ret;
-
-    ret = PCA9555_writeRegister(hdev, commandByteAddr + 1, highByte(regValue));
+    ret = PCA9555_writeRegister(hdev, commandByteAddr, regValue);
     if (ret != HAL_OK)
         return ret;
 
@@ -157,7 +153,6 @@ HAL_StatusTypeDef PCA9555_digitalWrite(struct PCA9555_Handle *hdev, uint8_t pin,
     HAL_StatusTypeDef ret;
 
     // read the current GPIO output latches
-    //uint8_t regAddr = PCA9555_commandByteForPin(pin, PCA9555_CB_OUTPUTS_PORTS);
     ret = PCA9555_readRegister(hdev, PCA9555_CB_OUTPUTS_PORTS, &data);
     if (ret != HAL_OK)
         return ret;
@@ -166,7 +161,6 @@ HAL_StatusTypeDef PCA9555_digitalWrite(struct PCA9555_Handle *hdev, uint8_t pin,
     bitWrite(data, pin, pinState);
 
     // write the new GPIO
-    //regAddr = PCA9555_commandByteForPin(pin, PCA9555_CB_OUTPUTS_PORTS);
     ret = PCA9555_writeRegister(hdev, PCA9555_CB_OUTPUTS_PORTS, data);
     if (ret != HAL_OK)
         return ret;
