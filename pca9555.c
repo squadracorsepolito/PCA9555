@@ -21,7 +21,6 @@
 /*---------- Private macro --------------------------------------------------*/
 
 /* max delay given to all I2C stuff to initialize itself */
-#define I2C_READYNESS_DELAY 500
 
 #define lowByte(w)  ((uint8_t)((w) & 0xff))
 #define highByte(w) ((uint8_t)((w) >> 8))
@@ -52,12 +51,12 @@ static HAL_StatusTypeDef PCA9555_readRegister(struct PCA9555_Handle *hdev, uint8
     uint8_t datalow  = 0;
 
     /* reading the low byte */
-    ret = HAL_I2C_Mem_Read(hdev->hi2c, hdev->addr, addr, 1, &datalow, 1, HAL_MAX_DELAY);
+    ret = HAL_I2C_Mem_Read(hdev->hi2c, hdev->addr, addr, 1, &datalow, 1, PCA9555_I2C_MAX_DELAY_MS);
     if (ret != HAL_OK)
         return ret;
 
     /* reading the high byte */
-    ret = HAL_I2C_Mem_Read(hdev->hi2c, hdev->addr, addr + 1, 1, &datahigh, 1, HAL_MAX_DELAY);
+    ret = HAL_I2C_Mem_Read(hdev->hi2c, hdev->addr, addr + 1, 1, &datahigh, 1, PCA9555_I2C_MAX_DELAY_MS);
     if (ret != HAL_OK)
         return ret;
 
@@ -79,11 +78,11 @@ static HAL_StatusTypeDef PCA9555_writeRegister(struct PCA9555_Handle *hdev, uint
     uint8_t lowb  = lowByte(regValue);
     uint8_t highb = highByte(regValue);
 
-    ret = HAL_I2C_Mem_Write(hdev->hi2c, hdev->addr, regAddr, 1, (uint8_t *)&lowb, 1, HAL_MAX_DELAY);
+    ret = HAL_I2C_Mem_Write(hdev->hi2c, hdev->addr, regAddr, 1, (uint8_t *)&lowb, 1, PCA9555_I2C_MAX_DELAY_MS);
     if (ret != HAL_OK)
         return ret;
 
-    ret = HAL_I2C_Mem_Write(hdev->hi2c, hdev->addr, regAddr + 1, 1, (uint8_t *)&highb, 1, HAL_MAX_DELAY);
+    ret = HAL_I2C_Mem_Write(hdev->hi2c, hdev->addr, regAddr + 1, 1, (uint8_t *)&highb, 1, PCA9555_I2C_MAX_DELAY_MS);
     if (ret != HAL_OK)
         return ret;
 
@@ -134,7 +133,7 @@ HAL_StatusTypeDef PCA9555_init(struct PCA9555_Handle *hdev, I2C_HandleTypeDef *h
     hdev->hi2c = hi2c;
     hdev->addr = addr << 1;
 
-    ret = HAL_I2C_IsDeviceReady(hi2c, hdev->addr, 20, I2C_READYNESS_DELAY);
+    ret = HAL_I2C_IsDeviceReady(hi2c, hdev->addr, 20, PCA9555_I2C_READYNESS_DELAY_MS);
     if (ret != HAL_OK)
         return ret;
 
@@ -159,6 +158,41 @@ HAL_StatusTypeDef PCA9555_digitalWrite(struct PCA9555_Handle *hdev, uint8_t pin,
 
     // set the pin and direction
     bitWrite(data, pin, pinState);
+
+    // write the new GPIO
+    ret = PCA9555_writeRegister(hdev, PCA9555_CB_OUTPUTS_PORTS, data);
+    if (ret != HAL_OK)
+        return ret;
+
+    return HAL_OK;
+}
+
+/**
+ * Writes to a set of pins with same mode
+ * @param hdev
+ * @param pin
+ * @param data
+ * @return
+ */
+HAL_StatusTypeDef PCA9555_digitalWrites(struct PCA9555_Handle *hdev,
+                                        uint8_t pins_len,
+                                        uint8_t const pins[pins_len],
+                                        GPIO_PinState const pinStates[pins_len]) {
+    uint16_t data;
+    HAL_StatusTypeDef ret;
+
+    if (pins_len >= (PCA9555_GPIO_NUM))
+        return HAL_ERROR;
+
+    // read the current GPIO output latches
+    ret = PCA9555_readRegister(hdev, PCA9555_CB_OUTPUTS_PORTS, &data);
+    if (ret != HAL_OK)
+        return ret;
+
+    for (uint8_t i = 0; i < pins_len; i++) {
+        // set the pin and direction
+        bitWrite(data, pins[i], pinStates[i]);
+    }
 
     // write the new GPIO
     ret = PCA9555_writeRegister(hdev, PCA9555_CB_OUTPUTS_PORTS, data);

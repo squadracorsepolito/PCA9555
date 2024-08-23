@@ -35,6 +35,14 @@ struct PCA9555_Handle {
 
 /* ---------- Exported constants --------------------------------------------*/
 
+#ifndef PCA9555_I2C_READYNESS_DELAY_MS
+#define PCA9555_I2C_READYNESS_DELAY_MS 500
+#endif
+
+#ifndef PCA9555_I2C_MAX_DELAY_MS
+#define PCA9555_I2C_MAX_DELAY_MS 10U
+#endif
+
 // Addresses (A0-A2)
 #define PCA9555_ADDR_FIXED_PART      (0b0100000U)
 #define PCA9555_ADDR_FIXED_PART_MASK (0b0000111U)
@@ -46,6 +54,9 @@ struct PCA9555_Handle {
 #define PCA9555_ADDR_25              0x25
 #define PCA9555_ADDR_26              0x26
 #define PCA9555_ADDR_27              0x27
+
+#define PCA9555_BANK_NUM (2U)
+#define PCA9555_GPIO_NUM (16U)
 
 /* Command Bytes */
 #define PCA9555_CB_INPUTS_PORTS     0x00
@@ -61,6 +72,10 @@ struct PCA9555_Handle {
 
 HAL_StatusTypeDef PCA9555_init(struct PCA9555_Handle *hdev, I2C_HandleTypeDef *hi2c, uint16_t addr);
 HAL_StatusTypeDef PCA9555_digitalWrite(struct PCA9555_Handle *hdev, uint8_t pin, GPIO_PinState pinState);
+HAL_StatusTypeDef PCA9555_digitalWrites(struct PCA9555_Handle *hdev,
+                                        uint8_t pins_len,
+                                        uint8_t const pins[pins_len],
+                                        GPIO_PinState const pinStates[pins_len]);
 HAL_StatusTypeDef PCA9555_digitalRead(struct PCA9555_Handle *hdev, uint8_t pin, uint8_t *data);
 HAL_StatusTypeDef PCA9555_pinMode(struct PCA9555_Handle *hdev,
                                   uint8_t pin,
